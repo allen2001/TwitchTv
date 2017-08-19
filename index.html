@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">	
+	<title>twitch</title>
+	<link rel="stylesheet" href="libs/normalize.css">
+	<link rel="stylesheet" href="libs/bootstrap.css">
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="header" id="header">
+				<h1>Twitch Streamers</h1>
+				<div class="menu">
+					<div class="menu-select all ac">
+						<i></i>
+						<span>all</span>
+					</div>
+					<div class="menu-select online">
+						<i></i>
+						<span>online</span>
+					</div>
+					<div class="menu-select offline">
+						<i></i>
+						<span>offline</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="play_list" id="play_list">
+			<!-- <div class="row">
+				<div class="item ac">
+					<div class="pic">
+						<img src="" alt="">
+					</div>
+					<p class="title">
+						<a href="" target="_blank"></a>
+					</p>
+					<p class="des"></p>
+				</div>
+			</div> -->
+		</div>
+		<div class="row">
+			<div class="footer"></div>
+		</div>
+	</div>	
+	<!-- js -->
+	<script type="text/javascript" src="libs/jquery.js"></script>
+	<script type="text/javascript" src="libs/bootstrap.js"></script>
+	<script type="text/javascript">
+		$(function () {
+			// TV用户名列表
+			var arr = ["freecodecamp", "storbeck", "terakilobyte", "habathcx", "RobotCaleb", "thomasballinger", "noobs2ninjas", "beohoff"];
+			
+			getChannelInfo(arr);
+
+			$(".menu-select").click(function () {
+				$(this).addClass("ac").siblings().removeClass("ac");
+				var index = $(this).index();
+				if (index === 0) {
+					$(".item").show();
+				} else if (index == 1) {
+					$(".item").hide();
+					$("#play_list").find(".ac").show();
+				} else {
+					$(".item").show();
+					$("#play_list").find(".ac").hide();
+				}
+			})
+		})
+
+		function getChannelInfo(arr) {
+			var api = "";
+			var cb = "?callback=?";
+
+			arr.forEach(function (channel) {
+				api = "https://wind-bow.gomix.me/twitch-api/" + "streams" + "/" + channel;
+				$.ajax({
+					type: "GET",
+					url: api + cb,
+					dataType: "jsonp",
+					success: function (data) {
+						// console.log(data);
+						var game, status;
+						if (data.stream == null) {
+							game = "Offline";
+							status = "offline";
+						} else if (data.stream == undefined) {
+							game = "Account Closed";
+							status = "offline";
+						} else {
+							game = data.stream.game;
+							status = "online";
+						}
+						$.ajax({
+							type: "GET",
+							url: "https://wind-bow.gomix.me/twitch-api/" + "channels" + "/" + channel + cb,
+							dataType: "jsonp",
+							success: function (data) {
+								console.log(data);
+								var logo = data.logo != null ? data.logo : "https://dummyimage.com/50x50/ecf0e7/5c5457.jpg&text=0x3F",
+									name = data.display_name != null ? data.display_name : channel,
+									des = status == "online" ? ": " + data.status : "";
+								// 
+								var html = "";
+								html += '<div class="row">' +
+											'<div class="item">' +
+												'<div class="pic">' +
+													'<img src="" alt="">' +
+												'</div>' +
+												'<p class="title">' +
+													'<a href="" target="_blank"></a>' +
+												'</p>' +
+												'<p class="des"></p>' +
+											'</div>' +
+										'</div>';
+								var item = $(html);
+								$("#play_list").append(item);
+								// 
+								item.find("img").attr("src", logo);
+								item.find(".title").children('a').attr("href", data.url).text(name);
+								item.find(".des").text(game + des);	
+								if (status == "online") {
+									item.find(".item").addClass("ac");
+								}				
+							}
+						})
+					}
+				})
+			})			
+		}
+	</script>
+</body>
+</html>
